@@ -44,7 +44,7 @@ export default {
         { name: { key: "description" } },
         { name: { key: "price" } },
       ],
-    subscriber: null,
+      subscriber: null,
     };
   },
   productosService: null,
@@ -59,29 +59,19 @@ export default {
       });
     },
     setupStream() {
-      if (this.subscriber == null) {
-        let es = new EventSource("http://localhost:8091/product/stream/");
-        es.addEventListener("message", (event) => {
-          let createData = JSON.parse(event.data);
-          this.productos.push({
-            id: createData.id,
-            description: createData.description,
-            price: createData.price,
+            let esSpecific = new EventSource(
+            "http://localhost:8091/product/streams?subscriber=" +
+              `${this.subscriber == null ? "" : this.subscriber}`
+          );
+          esSpecific.addEventListener("message", (event) => {
+            let createData = JSON.parse(event.data);
+            console.log(createData);
+            this.productos.push({
+              id: createData.id,
+              description: createData.description,
+              price: createData.price,
+            });
           });
-        });
-      } else {
-        let esSpecific = new EventSource("http://localhost:8091/product/streams?subscriber=" + this.subscriber);
-        
-        esSpecific.addEventListener("message", (event) => {
-          let createData = JSON.parse(event.data);
-          concole.log(createData)
-          this.productos.push({
-            id: createData.id,
-            description: createData.description,
-            price: createData.price,
-          });
-        });
-      }
     },
   },
   mounted() {
