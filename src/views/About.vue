@@ -58,7 +58,21 @@ export default {
         this.productos = response.data;
       });
     },
-    
+    setupStream() {
+      let esSpecific = new EventSource(
+        "http://localhost:8091/product/streams?subscriber=" +
+          `${this.subscriber == null ? "" : this.subscriber}`
+      );
+      esSpecific.addEventListener("message", (event) => {
+        let createData = JSON.parse(event.data);
+        console.log(createData);
+        this.productos.push({
+          id: createData.id,
+          description: createData.description,
+          price: createData.price,
+        });
+      });
+    },
   },
   mounted() {
     this.cargaProductos();
