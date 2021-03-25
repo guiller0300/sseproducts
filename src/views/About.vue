@@ -17,7 +17,7 @@
           placeholder="Precio Máximo"
         ></b-form-input>
         <b-input-group-append>
-          <b-button @click="setupStream">Aceptar</b-button>
+          <b-button @click="setupStreamSpecific">Aceptar</b-button>
         </b-input-group-append>
       </b-input-group>
     </b-form-group>
@@ -48,6 +48,7 @@ export default {
     };
   },
   productosService: null,
+  createData: null,
   created() {
     this.productosService = new ProductService();
     this.setupStream();
@@ -59,7 +60,7 @@ export default {
       });
     },
     setupStream() {
-      let esSpecific = new EventSource(
+      /*let esSpecific = new EventSource(
         "http://localhost:8091/product/streams?subscriber=" +
           `${this.subscriber == null ? "" : this.subscriber}`
       );
@@ -72,7 +73,34 @@ export default {
           price: createData.price,
         });
       });
+    },*/
+    let es = new EventSource(
+        "http://localhost:8091/product/stream/");
+      es.addEventListener("message", (event) => {
+      this.createData = JSON.parse(event.data);
+        console.log(this.createData);
+        this.productos.push({
+          id: this.createData.id,
+          description: this.createData.description,
+          price: this.createData.price,
+        });
+      });
     },
+    setupStreamSpecific(){
+      let esSpecific = new EventSource(
+        "http://localhost:8091/product/streams?subscriber=" +
+          `${this.subscriber == null ? "" : this.subscriber}`
+      );
+      esSpecific.addEventListener("message", (event) => {
+        let createData2 = JSON.parse(event.data);
+        console.log(createData2);
+        this.productos.push({
+          id: createData2.id,
+          description: createData2.description,
+          price: createData2.price,
+        });
+      });
+    }
   },
   mounted() {
     this.cargaProductos();
