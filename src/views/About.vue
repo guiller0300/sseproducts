@@ -23,15 +23,26 @@
     </b-form-group>
     <div>
       <b-table striped hover :items="productos" :fields="fields"></b-table>
+    <div class="row">
+				<b-form-textarea v-model="message" style="width: 350px" class="ui input"
+					placeholder="Message to Echo"></b-form-textarea>
+			</div>
+			<div class="row">
+				<b-button id="echo" @click="echo('hola')"
+					class="ui button">Echo message</b-button>
+			</div>
     </div>
   </div>
 </template>
 
 <script>
+//import func from 'vue-editor-bridge';
 import ProductService from "../services/ProductService";
 export default {
   data() {
     return {
+        message: '',
+  connection: null,
       productos: [],
       // Note `isActive` is left out and will not appear in the rendered table
       fields: [
@@ -49,9 +60,21 @@ export default {
   },
   productosService: null,
   createData: null,
+
   created() {
-    this.productosService = new ProductService();
+  this.productosService = new ProductService();
     this.setupStream();
+    console.log("Starting connection to WebSocket Server")
+    this.connection = new WebSocket("ws://localhost:8080/echo")
+
+    this.connection.onopen = function(event) {
+      console.log(event)
+      console.log("Successfully connected to the echo websocket server...")
+    }
+
+    this.connection.onmessage = function(event) {
+      console.log(event);
+    }
   },
   methods: {
     async cargaProductos() {
@@ -59,34 +82,24 @@ export default {
         this.productos = response.data;
       });
     },
-    setupStream() {
-      /*let esSpecific = new EventSource(
-        "http://localhost:8091/product/streams?subscriber=" +
-          `${this.subscriber == null ? "" : this.subscriber}`
-      );
-      esSpecific.addEventListener("message", (event) => {
-        let createData = JSON.parse(event.data);
-        console.log(createData);
-        this.productos.push({
-          id: createData.id,
-          description: createData.description,
-          price: createData.price,
-        });
-      });
-    },*/
-    let es = new EventSource(
-        "http://localhost:8091/product/stream/");
+    echo: function(dato){
+      console.log(dato);
+      console.log(this.connection);
+      this.connection.send(dato);
+    },
+    setupStream() {/*
+      let es = new EventSource("http://localhost:8091/product/stream/");
       es.addEventListener("message", (event) => {
-      this.createData = JSON.parse(event.data);
+        this.createData = JSON.parse(event.data);
         console.log(this.createData);
         this.productos.push({
           id: this.createData.id,
           description: this.createData.description,
           price: this.createData.price,
         });
-      });
+      });*/
     },
-    setupStreamSpecific(){
+    setupStreamSpecific() {
       let esSpecific = new EventSource(
         "http://localhost:8091/product/streams?subscriber=" +
           `${this.subscriber == null ? "" : this.subscriber}`
@@ -100,10 +113,10 @@ export default {
           price: createData2.price,
         });
       });
-    }
-  },
-  mounted() {
-    this.cargaProductos();
+    },
+    mounted() {
+      this.cargaProductos();
+    },
   },
 };
 </script>
