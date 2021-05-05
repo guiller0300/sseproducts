@@ -10,12 +10,13 @@
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
     "bootstrap-vue": "^2.17.3",
-    "core-js": "^3.6.5",
+    "core-js": "^3.11.3",
+    "rsocket-core": "0.0.25",
+    "rsocket-flowable": "0.0.25",
+    "rsocket-websocket-client": "0.0.25",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
-    "vuex": "^3.4.0",
-    "vue-infinite-loading": "^2.4.5"
-
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
     "@babel/polyfill": "^7.11.5",
