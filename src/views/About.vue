@@ -31,6 +31,7 @@
 				<b-button id="echo" @click="echo('hola')"
 					class="ui button">Echo message</b-button>
 			</div>
+      <div>{{message2}}</div>
     </div>
   </div>
 </template>
@@ -42,6 +43,7 @@ export default {
   data() {
     return {
         message: '',
+        message2:[],
   connection: null,
       productos: [],
       // Note `isActive` is left out and will not appear in the rendered table
@@ -86,6 +88,7 @@ export default {
       console.log(dato);
       console.log(this.connection);
       this.connection.send(dato);
+      this.message2.push(dato);
     },
     setupStream() {/*
       let es = new EventSource("http://localhost:8091/product/stream/");

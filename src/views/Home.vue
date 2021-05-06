@@ -18,6 +18,7 @@
               <label for="name">What is your name?</label>
               <input type="text" id="name" class="form-control" v-model="send_message" placeholder="Your name here...">
             </div>
+            {{message}}
             <button id="send" class="btn btn-default" type="submit" @click.prevent="send">Send</button>
           </form>
         </div>
@@ -49,6 +50,8 @@ export default {
   name: "websocketdemo",
   data() {
     return {
+      payload: null,
+      message: null,
       websocketUrl: "ws://localhost:8080/rsocket",
       received_messages: [],
       send_message: null,
@@ -67,7 +70,7 @@ export default {
 connect() {
       console.log("connecting with RSocket...");
       const transport = new RSocketWebSocketClient({
-        url: "ws://localhost:8801"
+        url: "ws://localhost:8080/rsocket"
       });
       const client = new RSocketClient({
         // send/receive JSON objects instead of strings/buffers
@@ -92,10 +95,17 @@ connect() {
           console.log("got connection error");
           console.error(error);
         },
+        onNext: payload => {
+          console.log(payload.data);
+          reload(payload.data);
+        },
         onSubscribe: cancel => {
           /* call cancel() to abort */
         }
-      }),
+      });
+},
+reload(payload){
+  this.message = JSON.stringify(payload)
 },
     /*connect() {
       this.socket = new WebSocket(this.websocketUrl);
