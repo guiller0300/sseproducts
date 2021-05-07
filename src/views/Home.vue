@@ -50,9 +50,8 @@ export default {
   name: "websocketdemo",
   data() {
     return {
-      payload: null,
       message: null,
-      websocketUrl: "ws://localhost:8080/rsocket",
+      websocketUrl: "ws://localhost:6565/rsocket",
       received_messages: [],
       send_message: null,
       connected: false
@@ -70,7 +69,7 @@ export default {
 connect() {
       console.log("connecting with RSocket...");
       const transport = new RSocketWebSocketClient({
-        url: "ws://localhost:8080/rsocket"
+        url: "ws://localhost:6565/rsocket"
       });
       const client = new RSocketClient({
         // send/receive JSON objects instead of strings/buffers
@@ -87,25 +86,28 @@ connect() {
         },
         transport
       });
-      client.connect().subscribe({
-        onComplete: socket => {
-          this.socket = socket;
-        },
-        onError: error => {
-          console.log("got connection error");
-          console.error(error);
-        },
-        onNext: payload => {
-          console.log(payload.data);
-          reload(payload.data);
-        },
-        onSubscribe: cancel => {
-          /* call cancel() to abort */
+      // error handler
+const errorHanlder = (e) => console.log(e);
+// response handler
+const responseHanlder = (payload) => {
+    console.log(payload.data);
+}
+
+const numberRequester = (socket) => {
+    socket.requestStream({
+        metadata: String.fromCharCode('todos'.length) + 'todos'
+    }).subscribe({
+        onError: errorHanlder,
+        onNext: responseHanlder,
+        onSubscribe: subscription => {
+            subscription.request(100); // set it to some max value
         }
-      });
-},
-reload(payload){
-  this.message = JSON.stringify(payload)
+    })
+}
+
+client.connect().then(sock => {
+     numberRequester(sock);
+}, errorHanlder);
 },
     /*connect() {
       this.socket = new WebSocket(this.websocketUrl);
