@@ -10,7 +10,7 @@
     "axios": "^0.21.1",
     "bootstrap": "^4.6.0",
     "bootstrap-vue": "^2.17.3",
-    "core-js": "^3.11.3",
+    "core-js": "^3.12.0",
     "rsocket-core": "0.0.25",
     "rsocket-flowable": "0.0.25",
     "rsocket-websocket-client": "0.0.25",

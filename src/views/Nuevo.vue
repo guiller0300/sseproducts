@@ -50,6 +50,7 @@ const responseHanlder = (payload) => {
     li.innerText = payload.data;
     li.classList.add('list-group-item', 'small')
     document.getElementById('result').appendChild(li);
+    console.log(payload.data)
 }
 
 const numberRequester = (socket, value) => {

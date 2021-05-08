@@ -65,7 +65,7 @@ export default {
 
   created() {
   this.productosService = new ProductService();
-    this.setupStream();
+    this.setupStreamSpecific();
     console.log("Starting connection to WebSocket Server")
     this.connection = new WebSocket("ws://localhost:8080/echo")
 
@@ -103,9 +103,9 @@ export default {
       });*/
     },
     setupStreamSpecific() {
-      let esSpecific = new EventSource(
-        "http://localhost:8091/product/streams?subscriber=" +
-          `${this.subscriber == null ? "" : this.subscriber}`
+      let esSpecific = new EventSource("http://localhost:8080/products/socket/all"
+        /*"http://localhost:8091/product/streams?subscriber=" +
+          `${this.subscriber == null ? "" : this.subscriber}`*/
       );
       esSpecific.addEventListener("message", (event) => {
         let createData2 = JSON.parse(event.data);

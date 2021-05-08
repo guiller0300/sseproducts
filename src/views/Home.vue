@@ -6,8 +6,23 @@
           <form class="form-inline">
             <div class="form-group">
               <label for="connect">WebSocket connection:</label>
-              <button id="connect" class="btn btn-default" type="submit" :disabled="connected == true" @click.prevent="connect()">Connect</button>
-              <button id="disconnect" class="btn btn-default" type="submit" :disabled="connected == false" @click.prevent="disconnect()">Disconnect
+              <button
+                id="connect"
+                class="btn btn-default"
+                type="submit"
+                :disabled="connected == true"
+                @click.prevent="connect()"
+              >
+                Connect
+              </button>
+              <button
+                id="disconnect"
+                class="btn btn-default"
+                type="submit"
+                :disabled="connected == false"
+                @click.prevent="disconnect()"
+              >
+                Disconnect
               </button>
             </div>
           </form>
@@ -16,10 +31,23 @@
           <form class="form-inline">
             <div class="form-group">
               <label for="name">What is your name?</label>
-              <input type="text" id="name" class="form-control" v-model="send_message" placeholder="Your name here...">
+              <input
+                type="text"
+                id="name"
+                class="form-control"
+                v-model="send_message"
+                placeholder="Your name here..."
+              />
             </div>
-            {{message}}
-            <button id="send" class="btn btn-default" type="submit" @click.prevent="send">Send</button>
+            {{ message }}
+            <button
+              id="send"
+              class="btn btn-default"
+              type="submit"
+              @click.prevent="send"
+            >
+              Send
+            </button>
           </form>
         </div>
       </div>
@@ -43,8 +71,11 @@
   </div>
 </template>
 <script>
-
-import { RSocketClient, JsonSerializers } from "rsocket-core";
+import {
+  RSocketClient,
+  JsonSerializers,
+  IdentitySerializer,
+} from "rsocket-core";
 import RSocketWebSocketClient from "rsocket-websocket-client";
 export default {
   name: "websocketdemo",
@@ -54,7 +85,7 @@ export default {
       websocketUrl: "ws://localhost:6565/rsocket",
       received_messages: [],
       send_message: null,
-      connected: false
+      connected: false,
     };
   },
   methods: {
@@ -66,14 +97,15 @@ export default {
         this.socket.send(JSON.stringify(msg));
       }
     },
-connect() {
+    connect() {
       console.log("connecting with RSocket...");
       const transport = new RSocketWebSocketClient({
-        url: "ws://localhost:6565/rsocket"
+        url: "ws://localhost:6565/rsocket",
       });
       const client = new RSocketClient({
         // send/receive JSON objects instead of strings/buffers
         serializers: JsonSerializers,
+        metadata: IdentitySerializer,
         setup: {
           // ms btw sending keepalive to server
           keepAlive: 60000,
@@ -82,33 +114,42 @@ connect() {
           // format of `data`
           dataMimeType: "application/json",
           // format of `metadata`
-          metadataMimeType: "application/json"
+          metadataMimeType: "message/x.rsocket.routing.v0",
         },
-        transport
+        transport,
       });
       // error handler
-const errorHanlder = (e) => console.log(e);
-// response handler
-const responseHanlder = (payload) => {
-    console.log(payload.data);
-}
+      const errorHanlder = (e) => console.log(e);
+      // response handler
+      const responseHanlder = (payload) => {
+        console.log(payload.data);
+      };
 
-const numberRequester = (socket) => {
-    socket.requestStream({
-        metadata: String.fromCharCode('todos'.length) + 'todos'
-    }).subscribe({
-        onError: errorHanlder,
-        onNext: responseHanlder,
-        onSubscribe: subscription => {
-            subscription.request(100); // set it to some max value
-        }
-    })
-}
-
-client.connect().then(sock => {
-     numberRequester(sock);
-}, errorHanlder);
-},
+      client.connect().subscribe({
+        onComplete: (socket) => {
+          socket
+            .requestStream({
+              data: null,
+              metadata: encodeAndAddWellKnownMetadata(
+              encodeAndAddCustomMetadata(
+                Buffer.alloc(0),
+                "message/x.rsocket.routing.v0",
+              ),
+              MESSAGE_RSOCKET_ROUTING,
+              Buffer.from(String.fromCharCode("todos".length) + "todos")
+            )
+            })
+            .subscribe({
+              onComplete: () => console.log('complete'),
+              onError: errorHanlder,
+              onNext: responseHanlder,
+              onSubscribe: (subscription) => {
+                subscription.request(2147483647); // set it to some max value
+              },
+            });
+        },
+      });
+    },
     /*connect() {
       this.socket = new WebSocket(this.websocketUrl);
       this.socket.onopen = () => {
@@ -132,10 +173,10 @@ client.connect().then(sock => {
     disconnect() {
       console.log("trying to disconnect..");
       this.socket.close();
-    }
+    },
   },
   mounted() {
     // this.connect();
-  }
+  },
 };
 </script>
