@@ -73,7 +73,7 @@
 <script>
 import {
   RSocketClient,
-  JsonSerializers,
+  JsonSerializer,
   IdentitySerializer,
 } from "rsocket-core";
 import RSocketWebSocketClient from "rsocket-websocket-client";
@@ -98,26 +98,26 @@ export default {
       }
     },
     connect() {
-      console.log("connecting with RSocket...");
-      const transport = new RSocketWebSocketClient({
-        url: "ws://localhost:6565/rsocket",
-      });
+      // backend ws endpoint
+      const wsURL = "ws://localhost:6565/rsocket";
+
+      // rsocket client
       const client = new RSocketClient({
-        // send/receive JSON objects instead of strings/buffers
-        serializers: JsonSerializers,
-        metadata: IdentitySerializer,
+        serializers: {
+          data: JsonSerializer,
+          metadata: IdentitySerializer,
+        },
         setup: {
-          // ms btw sending keepalive to server
           keepAlive: 60000,
-          // ms timeout if no keepalive response
           lifetime: 180000,
-          // format of `data`
           dataMimeType: "application/json",
-          // format of `metadata`
           metadataMimeType: "message/x.rsocket.routing.v0",
         },
-        transport,
+        transport: new RSocketWebSocketClient({
+          url: wsURL,
+        }),
       });
+
       // error handler
       const errorHanlder = (e) => console.log(e);
       // response handler
@@ -125,30 +125,24 @@ export default {
         console.log(payload.data);
       };
 
-      client.connect().subscribe({
-        onComplete: (socket) => {
-          socket
-            .requestStream({
-              data: null,
-              metadata: encodeAndAddWellKnownMetadata(
-              encodeAndAddCustomMetadata(
-                Buffer.alloc(0),
-                "message/x.rsocket.routing.v0",
-              ),
-              MESSAGE_RSOCKET_ROUTING,
-              Buffer.from(String.fromCharCode("todos".length) + "todos")
-            )
-            })
-            .subscribe({
-              onComplete: () => console.log('complete'),
-              onError: errorHanlder,
-              onNext: responseHanlder,
-              onSubscribe: (subscription) => {
-                subscription.request(2147483647); // set it to some max value
-              },
-            });
-        },
-      });
+      const numberRequester = (socket) => {
+        socket
+          .requestStream({
+            metadata:
+              String.fromCharCode("todos".length) + "todos",
+          })
+          .subscribe({
+            onError: errorHanlder,
+            onNext: responseHanlder,
+            onSubscribe: (subscription) => {
+              subscription.request(100); // set it to some max value
+            },
+          });
+      };
+
+      client.connect().then((sock) => {
+            numberRequester(sock);
+      }, errorHanlder);
     },
     /*connect() {
       this.socket = new WebSocket(this.websocketUrl);
