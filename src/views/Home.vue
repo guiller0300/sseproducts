@@ -86,6 +86,7 @@ export default {
       received_messages: [],
       send_message: null,
       connected: false,
+      dato: 1,
     };
   },
   methods: {
@@ -97,53 +98,7 @@ export default {
         this.socket.send(JSON.stringify(msg));
       }
     },
-    connect() {
-      // backend ws endpoint
-      const wsURL = "ws://localhost:6565/rsocket";
-
-      // rsocket client
-      const client = new RSocketClient({
-        serializers: {
-          data: JsonSerializer,
-          metadata: IdentitySerializer,
-        },
-        setup: {
-          keepAlive: 60000,
-          lifetime: 180000,
-          dataMimeType: "application/json",
-          metadataMimeType: "message/x.rsocket.routing.v0",
-        },
-        transport: new RSocketWebSocketClient({
-          url: wsURL,
-        }),
-      });
-
-      // error handler
-      const errorHanlder = (e) => console.log(e);
-      // response handler
-      const responseHanlder = (payload) => {
-        console.log(payload.data);
-      };
-
-      const numberRequester = (socket) => {
-        socket
-          .requestStream({
-            metadata:
-              String.fromCharCode("todos".length) + "todos",
-          })
-          .subscribe({
-            onError: errorHanlder,
-            onNext: responseHanlder,
-            onSubscribe: (subscription) => {
-              subscription.request(100); // set it to some max value
-            },
-          });
-      };
-
-      client.connect().then((sock) => {
-            numberRequester(sock);
-      }, errorHanlder);
-    },
+    connect() {},
     /*connect() {
       this.socket = new WebSocket(this.websocketUrl);
       this.socket.onopen = () => {
@@ -173,4 +128,50 @@ export default {
     // this.connect();
   },
 };
+// backend ws endpoint
+const wsURL = "ws://localhost:6565/rsocket";
+
+// rsocket client
+const client = new RSocketClient({
+  serializers: {
+    data: JsonSerializer,
+    metadata: IdentitySerializer,
+  },
+  setup: {
+    keepAlive: 60000,
+    lifetime: 180000,
+    dataMimeType: "application/json",
+    metadataMimeType: "message/x.rsocket.routing.v0",
+  },
+  transport: new RSocketWebSocketClient({
+    url: wsURL,
+  }),
+});
+
+  // error handler
+  const errorHanlder = (e) => console.log(e);
+  // response handler
+  const responseHanlder = (payload) => {
+    console.log(payload.data);
+  };
+
+const numberRequester = (socket, value) => {
+  socket
+    .requestStream({
+      data: value,
+      metadata: String.fromCharCode("todos".length) + "todos",
+    })
+    .subscribe({
+      onError: errorHanlder,
+      onNext: responseHanlder,
+      onSubscribe: (subscription) => {
+        subscription.request(100); // set it to some max value
+      },
+    });
+};
+client.connect().then((sock) => {
+  document.getElementById("connect").addEventListener("click", () => {
+    numberRequester(sock);
+  });
+}, errorHanlder);
 </script>
