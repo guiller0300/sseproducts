@@ -103,7 +103,7 @@ export default {
       });*/
     },
     setupStreamSpecific() {
-      let esSpecific = new EventSource("http://localhost:8080/products/socket/all"
+      let esSpecific = new EventSource("http://localhost:8080/product/socket/all"
         /*"http://localhost:8091/product/streams?subscriber=" +
           `${this.subscriber == null ? "" : this.subscriber}`*/
       );
