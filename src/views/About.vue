@@ -17,7 +17,7 @@
           placeholder="Precio Máximo"
         ></b-form-input>
         <b-input-group-append>
-          <b-button @click="setupStreamSpecific">Aceptar</b-button>
+          <b-button @click="setupStream">Aceptar</b-button>
         </b-input-group-append>
       </b-input-group>
     </b-form-group>
@@ -65,7 +65,7 @@ export default {
 
   created() {
   this.productosService = new ProductService();
-    this.setupStreamSpecific();
+    this.setupStream();
     console.log("Starting connection to WebSocket Server")
     this.connection = new WebSocket("ws://localhost:8080/echo")
 
@@ -84,14 +84,14 @@ export default {
         this.productos = response.data;
       });
     },
-    echo: function(dato){
+    /*echo: function(dato){
       console.log(dato);
       console.log(this.connection);
       this.connection.send(dato);
       this.message2.push(dato);
-    },
-    setupStream() {/*
-      let es = new EventSource("http://localhost:8091/product/stream/");
+    },*/
+    setupStream() {
+      let es = new EventSource("http://localhost:8080/product/stream/");
       es.addEventListener("message", (event) => {
         this.createData = JSON.parse(event.data);
         console.log(this.createData);
@@ -100,12 +100,12 @@ export default {
           description: this.createData.description,
           price: this.createData.price,
         });
-      });*/
+      });
     },
-    setupStreamSpecific() {
+    /*setupStreamSpecific() {
       let esSpecific = new EventSource("http://localhost:8080/product/socket/all"
         /*"http://localhost:8091/product/streams?subscriber=" +
-          `${this.subscriber == null ? "" : this.subscriber}`*/
+          `${this.subscriber == null ? "" : this.subscriber}`
       );
       esSpecific.addEventListener("message", (event) => {
         let createData2 = JSON.parse(event.data);
@@ -116,7 +116,7 @@ export default {
           price: createData2.price,
         });
       });
-    },
+    },*/
     mounted() {
       this.cargaProductos();
     },
