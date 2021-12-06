@@ -17,7 +17,7 @@ import RSocketWebSocketClient from 'rsocket-websocket-client';
 export default{
     data() {
         return {
-            
+            id: null
         }
     },
 }
@@ -31,7 +31,11 @@ const client = new RSocketClient({
         data: JsonSerializer,
         metadata: IdentitySerializer
     },
-    setup: {
+    setup: { 
+        /*payload: {
+            data: Math.round(Math.random() * 10),
+            metadata: String.fromCharCode('client-id'.length) + "client-id"
+          },*/
         keepAlive: 60000,
         lifetime: 180000,
         dataMimeType: 'application/json',
@@ -67,6 +71,7 @@ const numberRequester = (socket, value) => {
 }
 
 client.connect().then(sock => {
+    console.log(sock)
     document.getElementById('n').addEventListener('change', ({srcElement}) => {
         numberRequester(sock, parseInt(srcElement.value));
     })
